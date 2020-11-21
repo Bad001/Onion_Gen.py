@@ -1,5 +1,6 @@
 import random
 import string
+import requests
 from colorama import Fore, Style
 from datetime import date
 
@@ -23,7 +24,26 @@ def randomString():
     return myString
 
 def verifyOnionLink(linkToVerify):
-    #to do
+    session = requests.session()
+    session.proxies = {
+        'http': 'socks5h://localhost:9050',
+        'https': 'socks5h://localhost:9050',
+    }
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'max-age=0',
+        'TE': 'Trailers',
+    }
+    try:
+        r = session.get(linkToVerify, headers=headers)
+        session.cookies.clear()
+    except:
+        session.cookies.clear()
+        return False
     return True
 
 def generateOnionLink(numLink):
@@ -37,7 +57,7 @@ def generateOnionLink(numLink):
         link += tmp+"\n"
     print("Your online link:\n"+link)
     response = input("Do you want to save those in a file? (y/N) -> ")
-    if response == 'y' or response == 'Y':
+    if response.lower() == 'y' or response.lower() == 'yes':
         today = date.today()
         fp = open("Generated onion link "+today.strftime("%b-%d-%Y")+".txt","a")
         fp.write(link)
@@ -52,4 +72,7 @@ while choice != '0':
         generateOnionLink(numLink)
     if choice == '2':
         linkToVerify = input('Type or paste the link you want to test: ')
-        verifyOnionLink(linkToVerify)
+        if verifyOnionLink(linkToVerify):
+            print(linkToVerify + " is online\n")
+        else:
+            print(linkToVerify + " No response :( the site is offline or wrong\n")
