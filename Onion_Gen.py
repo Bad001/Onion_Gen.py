@@ -39,11 +39,17 @@ def verifyOnionLink(linkToVerify):
         'TE': 'Trailers',
     }
     try:
-        r = session.get(linkToVerify, headers=headers)
+        print(Fore.YELLOW+" Trying to connect to "+linkToVerify)
+        print(Style.RESET_ALL)
+        r = session.get(linkToVerify, headers=headers, timeout=10)
         session.cookies.clear()
     except:
         session.cookies.clear()
+        print(Fore.RED+"  Connection to "+linkToVerify+" failed!")
+        print(Style.RESET_ALL)
         return False
+    print(Fore.GREEN+"  Connection to "+linkToVerify+" succeded, this site is online\n")
+    print(Style.RESET_ALL)
     return True
 
 def generateOnionLink(numLink):
@@ -72,7 +78,4 @@ while choice != '0':
         generateOnionLink(numLink)
     if choice == '2':
         linkToVerify = input('Type or paste the link you want to test: ')
-        if verifyOnionLink(linkToVerify):
-            print(linkToVerify + " is online\n")
-        else:
-            print(linkToVerify + " No response :( the site is offline or wrong\n")
+        verifyOnionLink(linkToVerify)
