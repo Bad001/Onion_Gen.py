@@ -1,6 +1,10 @@
 import random
 import string
 import requests
+import base64
+import hashlib
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import x25519
 from colorama import Fore, Style
 from datetime import date
 
@@ -18,10 +22,23 @@ def printMenu():
     print(Style.RESET_ALL)
     print(' Select from the menu:\n\n  1) Generate onion link\n  2) Verify onion link\n  0) Exit the script\n')
 
-def randomString():
-    letters_and_digits = string.ascii_lowercase + string.digits
-    myString = ''.join((random.choice(letters_and_digits) for i in range(16)))
-    return myString
+def generate_tor_v3_keys():
+    #Generates public, private keypair
+    private_key = x25519.X25519PrivateKey.generate()
+    private_bytes = private_key.private_bytes(
+        encoding=serialization.Encoding.Raw	,
+        format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption())
+    public_key = private_key.public_key()
+    public_bytes = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw)
+    global public
+    public = base64.b32encode(public_bytes).replace(b'=', b'') \
+                       .decode("utf-8")
+    private = base64.b32encode(private_bytes).replace(b'=', b'') \
+                        .decode("utf-8")
+    return public, private
 
 def verifyOnionLink(linkToVerify):
     session = requests.session()
@@ -58,7 +75,8 @@ def generateOnionLink(numLink):
     isOnionLinkOnline = False
     for i in range(int(numLink)):
         while not isOnionLinkOnline:
-            tmp = "http://"+randomString()+".onion/"
+            generate_tor_v3_keys()
+            tmp = ''.join(hashlib.sha1(map(str, public)).encode('utf-8').digest()[:10]).lower()+".onion"
             isOnionLinkOnline = verifyOnionLink(tmp)
         link += tmp+"\n"
     print("Your online link:\n"+link)
